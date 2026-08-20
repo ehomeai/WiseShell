@@ -1,0 +1,6 @@
+﻿<Solution>
+  <Project Path="WiseShell.App/WiseShell.App.csproj" />
+  <Project Path="WiseShell.Core/WiseShell.Core.csproj" />
+  <Project Path="WiseShell.Tests/WiseShell.Tests.csproj" />
+  <Project Path="WiseShell.Transport.SshNet/WiseShell.Transport.SshNet.csproj" />
+</Solution>

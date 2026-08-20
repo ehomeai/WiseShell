@@ -1,0 +1,15 @@
+<Application x:Class="WiseShell.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <BitmapImage x:Key="AppWindowLogo" UriSource="pack://application:,,,/Assets/logo.ico" />
+
+        <Style TargetType="Window">
+            <Setter Property="Icon" Value="{StaticResource AppWindowLogo}" />
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Application.Resources>
+</Application>
