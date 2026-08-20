@@ -1120,7 +1120,7 @@ public sealed class SftpBrowserViewModel : ObservableObject, IAsyncDisposable
         var normalizedPath = NormalizeLocalPath(targetPath);
         if (!Directory.Exists(normalizedPath))
         {
-            throw new DirectoryNotFoundException($"鏈湴鐩綍涓嶅瓨鍦? {normalizedPath}");
+            throw new DirectoryNotFoundException($"本地目录不存在: {normalizedPath}");
         }
 
         var items = new List<LocalFileEntry>();
@@ -1528,7 +1528,7 @@ public sealed class SftpBrowserViewModel : ObservableObject, IAsyncDisposable
 
         TransferLogSummaryText = TransferLogs.Count == 0
             ? "暂无传输记录"
-            : $"传输日志: {TransferLogs.Count} 鏉★紝杩涜涓?{activeCount}锛屾帓闃?{pendingCount}";
+            : $"传输日志: {TransferLogs.Count} 条，进行中 {activeCount}，排队 {pendingCount}";
         OnPropertyChanged(nameof(CanClearTransferLogs));
     }
 
@@ -1572,7 +1572,7 @@ public sealed class SftpBrowserViewModel : ObservableObject, IAsyncDisposable
 
         if (elapsedSeconds <= 0.05d)
         {
-            return entry.TransferSpeedText == "--" ? "璁＄畻涓?.." : entry.TransferSpeedText;
+            return entry.TransferSpeedText == "--" ? "计算中..." : entry.TransferSpeedText;
         }
 
         var bytesPerSecond = Math.Max(0d, (bytesTransferred - previousBytes) / elapsedSeconds);

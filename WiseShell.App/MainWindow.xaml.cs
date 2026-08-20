@@ -49,25 +49,22 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void SessionTreeView_OnPreviewKeyDown(object sender, KeyEventArgs e)
+    private void SessionTreeView_OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (FindAncestor<TextBox>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
         if (e.Key != Key.F2)
         {
             return;
         }
 
         var selectedItem = SessionTreeView.SelectedItem as SessionExplorerItemViewModel ?? ViewModel.SelectedExplorerItem;
-        if (selectedItem?.Profile is not null)
+        if (ViewModel.TryBeginInlineRename(selectedItem))
         {
             e.Handled = true;
-            await ViewModel.RenameSessionCommand.ExecuteAsync();
-            return;
-        }
-
-        if (selectedItem?.CanManageFolder == true)
-        {
-            e.Handled = true;
-            await ViewModel.RenameFolderCommand.ExecuteAsync();
         }
     }
 

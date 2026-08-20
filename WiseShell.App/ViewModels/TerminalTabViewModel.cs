@@ -12,6 +12,10 @@ namespace WiseShell.App.ViewModels;
 
 public sealed class TerminalTabViewModel : ObservableObject, IAsyncDisposable
 {
+    private const int MinimumBufferedCharacters = 100_000;
+    private const int MaximumBufferedCharacters = 1_000_000;
+    private const int AverageCharactersPerScrollbackLine = 240;
+
     private readonly Dispatcher _dispatcher;
     private readonly Func<ITerminalSession> _sessionFactory;
     private readonly Func<CancellationToken, Task<TerminalSessionStartRequest>> _requestFactory;
@@ -215,8 +219,8 @@ public sealed class TerminalTabViewModel : ObservableObject, IAsyncDisposable
             return;
         }
 
-        _disposed = true;
         await CloseAsync(changeStatus: false);
+        _disposed = true;
     }
 
     private async Task ConnectCoreAsync(CancellationToken cancellationToken)
@@ -227,11 +231,32 @@ public sealed class TerminalTabViewModel : ObservableObject, IAsyncDisposable
         session.ConnectionStateChanged += OnSessionConnectionStateChanged;
 
         _session = session;
-        OpenLogWriter();
-        await session.ConnectAsync(request, cancellationToken);
-        _lastConnectedRequest = CloneRequest(request);
-        UpdateConnectionState(TerminalConnectionState.Connected);
-        _connectedCallback?.Invoke(request);
+        try
+        {
+            await session.ConnectAsync(request, cancellationToken);
+            OpenLogWriter();
+            _lastConnectedRequest = CloneRequest(request);
+            UpdateConnectionState(TerminalConnectionState.Connected);
+            _connectedCallback?.Invoke(request);
+        }
+        catch
+        {
+            session.OutputReceived -= OnSessionOutputReceived;
+            session.ConnectionStateChanged -= OnSessionConnectionStateChanged;
+            if (ReferenceEquals(_session, session))
+            {
+                _session = null;
+            }
+
+            var writerToDispose = DetachLogWriter();
+            if (writerToDispose is not null)
+            {
+                await writerToDispose.DisposeAsync();
+            }
+
+            await session.DisposeAsync();
+            throw;
+        }
     }
 
     private async void OnSessionConnectionStateChanged(object? sender, TerminalConnectionStateChangedEventArgs e)
@@ -254,10 +279,25 @@ public sealed class TerminalTabViewModel : ObservableObject, IAsyncDisposable
         lock (_outputSync)
         {
             _outputBuffer.Append(e.Text);
+            TrimOutputBuffer();
         }
 
         TryWriteLog(e.Text);
         OutputAppended?.Invoke(e.Text);
+    }
+
+    private void TrimOutputBuffer()
+    {
+        var maxBufferedCharacters = (int)Math.Clamp(
+            (long)ScrollbackLines * AverageCharactersPerScrollbackLine,
+            MinimumBufferedCharacters,
+            MaximumBufferedCharacters);
+        if (_outputBuffer.Length <= maxBufferedCharacters)
+        {
+            return;
+        }
+
+        _outputBuffer.Remove(0, _outputBuffer.Length - maxBufferedCharacters);
     }
 
     private void OpenLogWriter()

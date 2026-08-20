@@ -28,7 +28,7 @@ public partial class SecretPromptWindow : Window
     {
         var profile = request.Profile;
         HostText.Text = BuildHostText(profile);
-        UsernameText.Text = string.IsNullOrWhiteSpace(profile.Username) ? "(鏈～鍐?" : profile.Username;
+        UsernameText.Text = string.IsNullOrWhiteSpace(profile.Username) ? "(未填写)" : profile.Username;
         ServiceTypeText.Text = BuildServiceTypeText(profile);
         PromptMessage.Text = request.Message;
 
@@ -78,7 +78,7 @@ public partial class SecretPromptWindow : Window
     private static string BuildHostText(SessionProfile profile)
     {
         var endpoint = string.IsNullOrWhiteSpace(profile.Host)
-            ? "(鏈厤缃富鏈?"
+            ? "(未配置主机)"
             : $"{profile.Host}:{profile.Port}";
 
         return string.IsNullOrWhiteSpace(profile.Name)
@@ -99,7 +99,7 @@ public partial class SecretPromptWindow : Window
     {
         if (string.IsNullOrWhiteSpace(privateKeyPath))
         {
-            return "(鏈厤缃閽ユ枃浠?";
+            return "(未配置私钥文件)";
         }
 
         try

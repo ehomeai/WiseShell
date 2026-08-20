@@ -107,7 +107,7 @@
         output = output.replace(/\x1b[()][A-Za-z0-9]/g, "");
         output = output.replace(/\r\n/g, "\n");
         output = output.replace(/\r/g, "\n");
-        output = output.replace(/\x08/g, "\b");
+        output = output.replace(/[\x08\x7f]/g, "\b");
         return output;
       }
 
@@ -145,12 +145,19 @@
           const ch = output[index];
           if (ch === "\b") {
             removeLastCharacter();
+          } else if (isIgnoredControlCharacter(ch)) {
+            // Ignore terminal controls such as BEL so they are not rendered as boxes.
           } else {
             appendStyledText(ch);
           }
 
           index += 1;
         }
+      }
+
+      function isIgnoredControlCharacter(ch) {
+        const code = ch.charCodeAt(0);
+        return (code >= 0 && code < 32 && ch !== "\n" && ch !== "\t") || code === 127;
       }
 
       function createDefaultStyle() {

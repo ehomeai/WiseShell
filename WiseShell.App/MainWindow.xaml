@@ -314,12 +314,12 @@
             </MenuItem>
             <MenuItem Header="编辑(E)">
                 <MenuItem Header="编辑会话" Command="{Binding EditSessionCommand}" />
-                <MenuItem Header="重命名会话" Command="{Binding RenameSessionCommand}" />
+                <MenuItem Header="重命名会话" Command="{Binding RenameSessionCommand}" InputGestureText="F2" />
                 <MenuItem Header="复制会话" Command="{Binding DuplicateSessionCommand}" />
                 <MenuItem Header="删除会话" Command="{Binding DeleteSessionCommand}" />
                 <Separator />
                 <MenuItem Header="新建文件夹" Command="{Binding NewFolderCommand}" />
-                <MenuItem Header="重命名文件夹" Command="{Binding RenameFolderCommand}" />
+                <MenuItem Header="重命名文件夹" Command="{Binding RenameFolderCommand}" InputGestureText="F2" />
                 <MenuItem Header="删除文件夹" Command="{Binding DeleteFolderCommand}" />
                 <Separator />
                 <MenuItem Header="重命名标签" Command="{Binding RenameTabCommand}" />

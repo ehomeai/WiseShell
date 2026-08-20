@@ -246,11 +246,11 @@ public sealed class MainWindowViewModel : ObservableObject, IAsyncDisposable
         return !string.Equals(sourceFolderPath, destinationFolderPath, StringComparison.OrdinalIgnoreCase);
     }
 
-    private void BeginInlineRename(SessionExplorerItemViewModel? item)
+    public bool TryBeginInlineRename(SessionExplorerItemViewModel? item)
     {
         if (item is null || item.IsVirtualRoot || (item.Profile is null && !item.CanManageFolder))
         {
-            return;
+            return false;
         }
 
         foreach (var root in SessionTree)
@@ -260,6 +260,7 @@ public sealed class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
         item.EditingName = item.DisplayName;
         item.IsEditingName = true;
+        return true;
     }
 
     public async Task MoveExplorerItemAsync(
@@ -403,7 +404,7 @@ public sealed class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
     private Task RenameSelectedSessionAsync()
     {
-        BeginInlineRename(SelectedExplorerItem);
+        TryBeginInlineRename(SelectedExplorerItem);
         return Task.CompletedTask;
     }
 
@@ -632,7 +633,7 @@ public sealed class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
     private Task RenameSelectedFolderAsync()
     {
-        BeginInlineRename(SelectedExplorerItem);
+        TryBeginInlineRename(SelectedExplorerItem);
         return Task.CompletedTask;
     }
 
