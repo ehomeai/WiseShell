@@ -7,6 +7,55 @@ using WiseShell.Core.Models;
 
 namespace WiseShell.Transport.SshNet.Services;
 
+internal static class LocalUploadExclusions
+{
+    private static readonly HashSet<string> ExcludedDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".svn",
+        ".git",
+        ".hg",
+        ".vs",
+        ".vscode",
+        ".idea",
+        "bin",
+        "obj",
+        "artifacts",
+        "node_modules",
+        "packages",
+        "TestResults",
+        "EBWebView",
+    };
+
+    private static readonly HashSet<string> ExcludedFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Thumbs.db",
+        "Desktop.ini",
+    };
+
+    private static readonly string[] ExcludedFileSuffixes =
+    [
+        ".log",
+        ".tmp",
+        ".temp",
+        ".user",
+        ".suo",
+        ".userosscache",
+        ".sln.docstates",
+    ];
+
+    public static bool ShouldExcludeDirectory(string directoryPath)
+    {
+        return ExcludedDirectoryNames.Contains(Path.GetFileName(directoryPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
+    }
+
+    public static bool ShouldExcludeFile(string filePath)
+    {
+        var fileName = Path.GetFileName(filePath);
+        return ExcludedFileNames.Contains(fileName)
+            || ExcludedFileSuffixes.Any(suffix => fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
 internal interface ISshNetSftpClientFactory
 {
     Task<ISshNetSftpClient> CreateAsync(SftpConnectionRequest request, CancellationToken cancellationToken);
@@ -189,7 +238,7 @@ internal sealed class SshNetSftpClient : ISshNetSftpClient
     public Task DeleteAsync(string remotePath, bool isDirectory, CancellationToken cancellationToken)
     {
         return isDirectory
-            ? _client.DeleteDirectoryAsync(remotePath, cancellationToken)
+            ? DeleteRemoteDirectoryRecursiveAsync(remotePath, cancellationToken)
             : _client.DeleteFileAsync(remotePath, cancellationToken);
     }
 
@@ -383,15 +432,20 @@ internal sealed class SshNetSftpClient : ISshNetSftpClient
         CancellationToken cancellationToken)
     {
         await EnsureRemoteDirectoryExistsAsync(remotePath, cancellationToken);
+        await DeleteRemoteExcludedEntriesAsync(remotePath, cancellationToken);
 
-        foreach (var directoryPath in Directory.EnumerateDirectories(localPath))
+        foreach (var directoryPath in Directory
+            .EnumerateDirectories(localPath)
+            .Where(path => !LocalUploadExclusions.ShouldExcludeDirectory(path)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var childRemotePath = RemotePathHelper.Combine(remotePath, Path.GetFileName(directoryPath));
             await UploadDirectoryCoreAsync(directoryPath, childRemotePath, progressState, progressCallback, cancellationToken);
         }
 
-        foreach (var filePath in Directory.EnumerateFiles(localPath))
+        foreach (var filePath in Directory
+            .EnumerateFiles(localPath)
+            .Where(path => !LocalUploadExclusions.ShouldExcludeFile(path)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var fileInfo = new FileInfo(filePath);
@@ -462,15 +516,87 @@ internal sealed class SshNetSftpClient : ISshNetSftpClient
         await _client.CreateDirectoryAsync(normalizedPath, cancellationToken);
     }
 
+    private async Task DeleteRemoteExcludedEntriesAsync(string remotePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var item in _client.ListDirectoryAsync(NormalizePath(remotePath), cancellationToken))
+            {
+                if (item.Name is "." or "..")
+                {
+                    continue;
+                }
+
+                var childRemotePath = item.FullName ?? RemotePathHelper.Combine(remotePath, item.Name);
+                if (item.IsDirectory && LocalUploadExclusions.ShouldExcludeDirectory(item.Name))
+                {
+                    await DeleteRemoteDirectoryRecursiveAsync(childRemotePath, cancellationToken);
+                    continue;
+                }
+
+                if (!item.IsDirectory && LocalUploadExclusions.ShouldExcludeFile(item.Name))
+                {
+                    await _client.DeleteFileAsync(childRemotePath, cancellationToken);
+                }
+            }
+        }
+        catch (SftpPathNotFoundException)
+        {
+        }
+    }
+
+    private async Task DeleteRemoteDirectoryRecursiveAsync(string remotePath, CancellationToken cancellationToken)
+    {
+        var normalizedPath = NormalizePath(remotePath);
+        await foreach (var item in _client.ListDirectoryAsync(normalizedPath, cancellationToken))
+        {
+            if (item.Name is "." or "..")
+            {
+                continue;
+            }
+
+            var childRemotePath = item.FullName ?? RemotePathHelper.Combine(normalizedPath, item.Name);
+            if (item.IsDirectory)
+            {
+                await DeleteRemoteDirectoryRecursiveAsync(childRemotePath, cancellationToken);
+                continue;
+            }
+
+            await _client.DeleteFileAsync(childRemotePath, cancellationToken);
+        }
+
+        await _client.DeleteDirectoryAsync(normalizedPath, cancellationToken);
+    }
+
     private static long CalculateLocalDirectorySize(string localPath)
     {
         long totalBytes = 0;
-        foreach (var filePath in Directory.EnumerateFiles(localPath, "*", SearchOption.AllDirectories))
+        foreach (var filePath in EnumerateUploadFiles(localPath))
         {
             totalBytes += new FileInfo(filePath).Length;
         }
 
         return totalBytes;
+    }
+
+    private static IEnumerable<string> EnumerateUploadFiles(string localPath)
+    {
+        foreach (var directoryPath in Directory
+            .EnumerateDirectories(localPath)
+            .Where(path => !LocalUploadExclusions.ShouldExcludeDirectory(path)))
+        {
+            foreach (var filePath in EnumerateUploadFiles(directoryPath))
+            {
+                yield return filePath;
+            }
+        }
+
+        foreach (var filePath in Directory
+            .EnumerateFiles(localPath)
+            .Where(path => !LocalUploadExclusions.ShouldExcludeFile(path)))
+        {
+            yield return filePath;
+        }
     }
 
     private async Task RunWithTransferProgressAsync(Action transferAction, CancellationToken cancellationToken)
