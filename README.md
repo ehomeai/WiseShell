@@ -2,6 +2,12 @@
 
 WiseShell 是一个面向 Windows 的 SSH/SFTP 桌面客户端，基于 `.NET 8`、`WPF`、`WebView2` 和 `SSH.NET` 构建。它专注于常用服务器运维场景：管理 SSH 会话、打开远程终端、浏览和传输 SFTP 文件，并安全保存连接凭据。
 
+## 界面预览
+
+![WiseShell 主界面](WiseShell.Doc/1.main.png)
+
+![WiseShell 新建会话](WiseShell.Doc/2.sites.png)
+
 ## 功能特性
 
 ### SSH 终端
