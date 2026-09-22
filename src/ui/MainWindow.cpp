@@ -7,6 +7,7 @@
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QDropEvent>
+#include <QGridLayout>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QLabel>
@@ -251,10 +252,48 @@ MainWindow::MainWindow(QWidget *parent, QString directory)
     });
     split->addWidget(tabs_);
     split->setSizes({280, 1000});
-    auto *welcome = new QLabel(
-        QStringLiteral("WiseShell\n\n新建会话，开始 SSH 连接\n\n双击会话打开终端 · 工具栏打开 SFTP\n\n") +
-        commonShortcuts());
-    welcome->setAlignment(Qt::AlignCenter);
+    auto *welcome = new QWidget;
+    auto *welcomeLayout = new QVBoxLayout(welcome);
+    welcomeLayout->setContentsMargins(24, 24, 24, 24);
+    auto *welcomeContent = new QWidget(welcome);
+    auto *contentLayout = new QVBoxLayout(welcomeContent);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(12);
+    auto *title = new QLabel(QStringLiteral("WiseShell"));
+    auto titleFont = title->font();
+    titleFont.setPointSizeF(titleFont.pointSizeF() + 4);
+    titleFont.setBold(true);
+    title->setFont(titleFont);
+    title->setAlignment(Qt::AlignCenter);
+    contentLayout->addWidget(title);
+    contentLayout->addSpacing(4);
+    for (const auto &text : {QStringLiteral("新建会话，开始 SSH 连接"),
+                             QStringLiteral("双击会话打开终端 · 工具栏打开 SFTP")}) {
+        auto *label = new QLabel(text);
+        label->setAlignment(Qt::AlignCenter);
+        contentLayout->addWidget(label);
+    }
+    contentLayout->addSpacing(12);
+    const auto shortcutLines = commonShortcuts().split('\n');
+    auto *shortcutTitle = new QLabel(shortcutLines.first());
+    auto headingFont = shortcutTitle->font();
+    headingFont.setBold(true);
+    shortcutTitle->setFont(headingFont);
+    contentLayout->addWidget(shortcutTitle);
+    auto *shortcutLayout = new QGridLayout;
+    shortcutLayout->setContentsMargins(0, 0, 0, 0);
+    shortcutLayout->setHorizontalSpacing(24);
+    shortcutLayout->setVerticalSpacing(10);
+    for (int row = 1; row < shortcutLines.size(); ++row) {
+        const auto &line = shortcutLines.at(row);
+        const auto separator = line.indexOf(QChar(u'：'));
+        shortcutLayout->addWidget(new QLabel(line.left(separator)), row - 1, 0,
+                                  Qt::AlignLeft | Qt::AlignVCenter);
+        shortcutLayout->addWidget(new QLabel(line.mid(separator + 1)), row - 1, 1,
+                                  Qt::AlignLeft | Qt::AlignVCenter);
+    }
+    contentLayout->addLayout(shortcutLayout);
+    welcomeLayout->addWidget(welcomeContent, 0, Qt::AlignCenter);
     tabs_->addTab(welcome, QStringLiteral("欢迎"));
     auto *bar = addToolBar(QStringLiteral("主工具栏"));
     bar->setMovable(false);
