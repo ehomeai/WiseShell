@@ -1,30 +1,5 @@
-# Build output
-bin/
-obj/
-artifacts/
-.dotnet-cli/
-
-# User and IDE state
+/~bak/
+.env
+.env.*
+!.env.example
 .vs/
-.vscode/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# Local source-control metadata from the current workspace
-.svn/
-
-# WebView2 runtime data
-*.WebView2/
-EBWebView/
-
-# Logs and temporary files
-*.log
-*.tmp
-*.temp
-TestResults/
-
-# OS files
-Thumbs.db
-Desktop.ini
