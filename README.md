@@ -6,4 +6,6 @@ WiseShell 是一个 SSH/SFTP 桌面客户端，当前版本使用 C++20、Qt Wid
 
 旧 WPF 版本可通过 Git 历史查看。
 
+源码发布和后续更新命令见 [GitHub 发布说明](PUBLISH.md)。
+
 项目采用 [MIT 许可证](LICENSE)，第三方依赖许可见 [第三方声明](WiseShell.Cpp/THIRD_PARTY_NOTICES.md)。
