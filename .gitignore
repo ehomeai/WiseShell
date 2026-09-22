@@ -1,3 +1,8 @@
+/out/
+/build/
+/deps/
+/CMakeUserPresets.json
+__pycache__/
 /~bak/
 .env
 .env.*

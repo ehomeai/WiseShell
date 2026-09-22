@@ -33,7 +33,7 @@ licenses = root / 'licenses'
 licenses.mkdir()
 shutil.copytree(source / 'licenses', licenses, dirs_exist_ok=True)
 shutil.copy2(source / 'THIRD_PARTY_NOTICES.md', licenses)
-shutil.copy2(args.license_file or source.parent / 'LICENSE', licenses / 'WiseShell-MIT.txt')
+shutil.copy2(args.license_file or source / 'LICENSE', licenses / 'WiseShell-MIT.txt')
 for dependency in ('libssh', 'qtkeychain', 'libvterm'):
     override = re.search(rf'^FETCHCONTENT_SOURCE_DIR_{dependency.upper()}:[^=]+=(.+)$', cache, re.M)
     dep = Path(override[1]) if override else build / '_deps' / (dependency + '-src')

@@ -2,7 +2,7 @@
 
 仓库地址：https://github.com/ehomeai/WiseShell.git 。以下命令在 Windows PowerShell 中执行，需要已安装 Git，并使用有仓库写入权限的 GitHub 账号完成认证。每一步成功后再执行下一步。
 
-当前项目已经配置 `origin`，并将 `main` 推送到远程。后续更新直接使用下面的流程。这里的发布指源码推送；构建与安装包生成见 [C++ 项目文档](WiseShell.Cpp/README.md)。
+当前项目已经配置 `origin`，并将 `main` 推送到远程。后续更新直接使用下面的流程。这里的发布指源码推送；构建与安装包生成见 [项目文档](README.md)。
 
 ## 后续更新
 
@@ -73,12 +73,12 @@ git push origin main
 
 ## 本项目的上传范围
 
-当前源码位于 `WiseShell.Cpp/`，旧 WPF 版本保留在 Git 历史中。根目录和 C++ 目录的 `.gitignore` 排除了 `~bak/`、`WiseShell.Cpp/out/`、`WiseShell.Cpp/build/`、`WiseShell.Cpp/deps/` 及本地环境配置等内容。
+项目根目录为 `D:\AI-Code\WiseShell`，源码位于根目录下的 `src/`，旧 WPF 版本保留在 Git 历史中。根目录的 `.gitignore` 排除了 `~bak/`、`out/`、`build/`、`deps/` 及本地环境配置等内容。
 
 可检查主要忽略规则是否生效：
 
 ```powershell
-git check-ignore '~bak/WiseShell.WPF/README.md' WiseShell.Cpp/out WiseShell.Cpp/deps
+git check-ignore '~bak/WiseShell.WPF/README.md' out deps
 ```
 
 这些规则仅影响未跟踪文件，已经提交过的文件不会因加入忽略规则而自动移出 Git。
